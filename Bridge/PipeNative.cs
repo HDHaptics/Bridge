@@ -409,12 +409,59 @@ public class PipeNative
     public static extern IntPtr OpenFileMapping(FileMapAccess dwDesiredAccess, bool bInheritHandle, string lpName);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, FileMapAccess dwDesiredAccess, UInt32 dwFileOffsetHigh, UInt32 dwFileOffsetLow, UIntPtr dwNumberrOfBytesToMap);
+    public static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, FileMapAccess dwDesiredAccess, UInt32 dwFileOffsetHigh, UInt32 dwFileOffsetLow, UInt32 dwNumberrOfBytesToMap);//UIntPtr dwNumberrOfBytesToMap);
+
+    [DllImport("kernel32.dll")]
+    public static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress,
+    out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
+
+    [DllImport("kernel32.dll")]
+    public static extern bool ReadProcessMemory(int hProcess, int lpBaseAddress,
+    byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
+
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
 } // class PipeNative
 
 #endregion
 
+#region SystemInfo
+
+/// <summary>
+/// Security Descriptor structure
+/// </summary>
+[StructLayoutAttribute(LayoutKind.Sequential)]
+public struct SYSTEM_INFO
+{
+    public ushort processorArchitecture;
+    public ushort reserved;
+    public uint pageSize;
+    public IntPtr minimumApplicationAddress;
+    public IntPtr maximumApplicationAddress;
+    public IntPtr activeProcessorMask;
+    public uint numberOfProcessors;
+    public uint processorType;
+    public uint allocationGranularity;
+    public ushort processorLevel;
+    public ushort processorRevision;
+}
+
+public struct MEMORY_BASIC_INFORMATION
+{
+    public int BaseAddress;
+    public int AllocationBase;
+    public int AllocationProtect;
+    public int RegionSize;   // size of the region allocated by the program
+    public int State;   // check if allocated (MEM_COMMIT)
+    public int Protect; // page protection (must be PAGE_READWRITE)
+    public int lType;
+}
+
+#endregion
 
 #region Security
 

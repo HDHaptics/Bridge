@@ -34,9 +34,9 @@
             // 
             // ErrorMsgLabel
             // 
-            this.ErrorMsgLabel.Location = new System.Drawing.Point(207, 195);
+            this.ErrorMsgLabel.Location = new System.Drawing.Point(164, 184);
             this.ErrorMsgLabel.Name = "ErrorMsgLabel";
-            this.ErrorMsgLabel.Size = new System.Drawing.Size(97, 33);
+            this.ErrorMsgLabel.Size = new System.Drawing.Size(200, 46);
             this.ErrorMsgLabel.TabIndex = 0;
             this.ErrorMsgLabel.Text = "error message";
             this.ErrorMsgLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -59,6 +59,7 @@
             this.Controls.Add(this.ErrorMsgLabel);
             this.Name = "ManagerForm";
             this.Text = "Bridge Program";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ManagerForm_FormClosing);
             this.ResumeLayout(false);
 
         }

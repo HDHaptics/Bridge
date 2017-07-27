@@ -35,5 +35,10 @@ namespace Bridge
                 ErrorMsgLabel.Text = "update text error";
             }
         }
+
+        private void ManagerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            manager.stopCHAI3D();
+        }
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Threading;
+//using System.IO.MemoryMappedFiles;
 
 namespace Bridge
 {
@@ -30,7 +31,7 @@ namespace Bridge
     /// <summary>
     /// Data structure between Chai3D and manager
     /// </summary>
-    public struct CHAI3DOutData         // CHAI3D --> Manager (Recving)
+    public struct HIPData         // CHAI3D --> Manager (Recving)
     {
         ///
         public float currentHIPX;
@@ -38,32 +39,49 @@ namespace Bridge
         public float currentHIPZ;
     }
 
-    public struct CHAI3DInData         // Manager --> CHAI3D (Sending)
+    public struct InfoView
+    {
+        public int sysGran;
+        public int numberOfView;
+        public int[] sizeOfView;
+    }
+
+    public struct ObjectView         // Manager --> CHAI3D (Sending)
     {
         ///
-        public float objectPositionX;
-        public float objectPositionY;
-        public float objectPositionZ;
+        public float objectPosX;
+        public float objectPosY;
+        public float objectPosZ;
+        public float objectRotX;
+        public float objectRotY;
+        public float objectRotZ;
+        //public float objectPositionX;
+        //public float[] objectPositionY;
+        //public float[] objectPositionZ;
     }
 
     public class Manager
     {
         /* // for Unreal
-        CHAI3DInData uinData;
+        HIPData uinData;
         IntPtr uinFileMap;
         IntPtr uinMapAddress;
 
-        CHAI3DOutData uoutData;
+        ObjData uoutData;
         IntPtr uoutFileMap;
         IntPtr uoutMapAddress;
         */
 
         // for CHAI3D
-        CHAI3DInData cinData;
+        ObjectView cinData;
+        ObjectView cinData2;
+        InfoView cDataInfo;
         IntPtr cinFileMap;
         IntPtr cinMapAddress;
+        IntPtr cinMapAddressData;
+        IntPtr cinMapAddressData2;
 
-        CHAI3DOutData coutData;
+        HIPData coutData;
         IntPtr coutFileMap;
         IntPtr coutMapAddress;
 
@@ -75,21 +93,39 @@ namespace Bridge
         public string errMsg = "";
         int i = 0;
 
+        uint sizeObjNum;
+        uint sizeObjData;
+
         public void init ()
         {
+            SYSTEM_INFO sys_info = new SYSTEM_INFO();
+            PipeNative.GetSystemInfo(out sys_info);
+
+            //sizeObjNum = (uint)Marshal.SizeOf(cinDataNum);
+            //sizeObjData = (uint)Marshal.SizeOf(cinData);
+
+            uint NUMBER_OF_MAP_VIEW = 5;
+            uint FILE_MAP_START = 65536;
+            uint sysGran = sys_info.allocationGranularity;
+            uint fileMapStart = (FILE_MAP_START / sysGran) * sysGran;
+            uint mapViewSize1 = (FILE_MAP_START % sysGran) + sizeObjNum;
+            uint mapViewSize = (FILE_MAP_START % sysGran) + sizeObjData*2;
+            uint fileMapSize = FILE_MAP_START + sizeObjData;
+            int iViewDelta = (int) (FILE_MAP_START - fileMapStart);
+
             /// CHAI3D mapping create
             // outmap
             coutFileMap = PipeNative.CreateFileMapping(IntPtr.Subtract(IntPtr.Zero, 1),
                                 IntPtr.Zero,
                                 FileMapProtection.PageReadWrite | FileMapProtection.SectionCommit,
-                                0, 2048, "chai3d2manager");
+                                0, 139264, "chai3d2manager");
             if (coutFileMap == IntPtr.Zero)
             {
                 errMsg = "outFile (Recving) CreateFileMapping() Error.";
             }
             else
             {
-                coutMapAddress = PipeNative.MapViewOfFile(coutFileMap, FileMapAccess.FILE_MAP_ALL_ACCESS, 0, 0, UIntPtr.Zero);
+                coutMapAddress = PipeNative.MapViewOfFile(coutFileMap, FileMapAccess.FILE_MAP_ALL_ACCESS, 0, 0, 0);
                 if (coutMapAddress == IntPtr.Zero)
                 {
                     errMsg = "outFile (Recving) MapViewOfFile() Error.";
@@ -113,14 +149,18 @@ namespace Bridge
             cinFileMap = PipeNative.CreateFileMapping(IntPtr.Subtract(IntPtr.Zero, 1),
                                 IntPtr.Zero,
                                 FileMapProtection.PageReadWrite | FileMapProtection.SectionCommit,
-                                0, 2048, "manager2chai3d");
+                                0, sysGran * NUMBER_OF_MAP_VIEW, "manager2chai3d");
             if (cinFileMap == IntPtr.Zero)
             {
                 errMsg = "inFile (Sending) CreateFileMapping() Error.";
             }
             else
             {
-                cinMapAddress = PipeNative.MapViewOfFile(cinFileMap, FileMapAccess.FILE_MAP_ALL_ACCESS, 0, 0, UIntPtr.Zero);
+                
+                //uint sizeObjNum = (uint) Marshal.SizeOf(cinDataNum);
+                //uint sizeObjData = (uint) Marshal.SizeOf(cinData);
+
+                cinMapAddress = PipeNative.MapViewOfFile(cinFileMap, FileMapAccess.FILE_MAP_ALL_ACCESS, 0, 0, sysGran);
                 if (cinMapAddress == IntPtr.Zero)
                 {
                     errMsg = "inFile (Sending) MapViewOfFile() Error.";
@@ -128,14 +168,77 @@ namespace Bridge
                 }
                 else
                 {
-                    errMsg = "Sending No Problem!";
+                     
+                    errMsg = "No Sending Problem!";
                     // TODO: Sending Information Initialization
-                    cinData.objectPositionX = 0.0f;
-                    cinData.objectPositionX = 0.0f;
-                    cinData.objectPositionX = 0.0f;
+                    //cinData.numberOfObject = 10;
+                    cDataInfo.sysGran = (int) sysGran;
+                    cDataInfo.numberOfView = (int) NUMBER_OF_MAP_VIEW - 1;
+                    cDataInfo.sizeOfView = new int[4] { (int)sysGran, (int)sysGran, (int)sysGran, (int)sysGran };
+                    //cinData.objectPositionX = new float[10] { 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f };
+                    //cinData.objectPositionY = new float[10] { 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f };
+                    //cinData.objectPositionZ = new float[10] { 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f };
 
-                    Marshal.StructureToPtr(cinData, cinMapAddress, false);
+                    Marshal.StructureToPtr(cDataInfo, cinMapAddress, false);
+                    //Marshal.StructureToPtr()
                 }
+
+                ////////
+                cinMapAddressData = PipeNative.MapViewOfFile(cinFileMap, FileMapAccess.FILE_MAP_ALL_ACCESS, 0, fileMapStart, mapViewSize);
+                if (cinMapAddressData == IntPtr.Zero)
+                {
+                    errMsg = PipeNative.GetLastError() + " // inFile (Sending) MapViewOfFile() Error.";
+                    // tell it's an error
+                }
+                else
+                {
+                    
+                    errMsg = "No Sending Problem!";
+                    // TODO: Sending Information Initialization
+                    //cinData.numberOfObject = 10;
+                    cinData.objectPosX = 1f;
+                    cinData.objectPosY = 1f;
+                    cinData.objectPosZ = 1f;
+                    cinData.objectRotX = 0f;
+                    cinData.objectRotY = 0f;
+                    cinData.objectRotZ = 0f;
+
+                    Marshal.StructureToPtr(cinData, cinMapAddressData, false);
+                    //Marshal.StructureToPtr()
+                    cinData2.objectPosX = 2f;
+                    cinData2.objectPosY = 2f;
+                    cinData2.objectPosZ = 2f;
+                    cinData2.objectRotX = 0f;
+                    cinData2.objectRotY = 0f;
+                    cinData2.objectRotZ = 0f;
+                    
+                    Marshal.StructureToPtr(cinData2, cinMapAddressData + (int) sizeObjData, false);
+                }
+
+                ////////
+                /*
+                cinMapAddressData2 = PipeNative.MapViewOfFile(cinFileMap, FileMapAccess.FILE_MAP_ALL_ACCESS, 0, fileMapStart, sizeObjData);
+                if (cinMapAddressData2 == IntPtr.Zero)
+                {
+                    errMsg = PipeNative.GetLastError() + " // inFile (Sending) MapViewOfFile() Error.";
+                    // tell it's an error
+                }
+                else
+                {
+
+                    errMsg = "No Sending Problem!";
+                    // TODO: Sending Information Initialization
+                    cinData2.objectPosX = 2f;
+                    cinData2.objectPosY = 2f;
+                    cinData2.objectPosZ = 2f;
+                    cinData2.objectRotX = 0f;
+                    cinData2.objectRotY = 0f;
+                    cinData2.objectRotZ = 0f;
+
+                    Marshal.StructureToPtr(cinData2, cinMapAddressData2, false);
+                    //Marshal.StructureToPtr()
+                }
+                */
             }
 
             CHAI3Dthread = new Thread(CHAI3dThread);
@@ -148,7 +251,20 @@ namespace Bridge
             while (CHAI3Drunning)
             {
                 i++;
-                coutData = (CHAI3DOutData)Marshal.PtrToStructure(coutMapAddress, typeof(CHAI3DOutData));
+                coutData = (HIPData)Marshal.PtrToStructure(coutMapAddress, typeof(HIPData));
+
+                cinData = (ObjectView)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectView));
+                cinData.objectPosX = coutData.currentHIPX;
+                cinData.objectPosY = coutData.currentHIPY;
+                cinData.objectPosZ = coutData.currentHIPZ;
+                Marshal.StructureToPtr(cinData, cinMapAddressData, false);
+
+                cinData2 = (ObjectView)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectView));
+                cinData2.objectPosX = coutData.currentHIPX+1f;
+                cinData2.objectPosY = coutData.currentHIPY+1f;
+                cinData2.objectPosZ = coutData.currentHIPZ+1f;
+                Marshal.StructureToPtr(cinData2, cinMapAddressData + (int)sizeObjData, false);
+
                 updateTextEvent(this, EventArgs.Empty);
                 //if (i++ > 500000)
                 //    stopCHAI3D();
@@ -174,7 +290,7 @@ namespace Bridge
             return coutData.currentHIPX.ToString("0.000") + ", "
                 + coutData.currentHIPY.ToString("0.000") + ", "
                 + coutData.currentHIPZ.ToString("0.000")
-                + "\n" + i.ToString();
+                + "\n" + Marshal.SizeOf(cinData).ToString();
         }
     }
 }
