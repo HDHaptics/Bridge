@@ -149,7 +149,7 @@ namespace Bridge
             cinFileMap = PipeNative.CreateFileMapping(IntPtr.Subtract(IntPtr.Zero, 1),
                                 IntPtr.Zero,
                                 FileMapProtection.PageReadWrite | FileMapProtection.SectionCommit,
-                                0, sysGran * NUMBER_OF_MAP_VIEW, "manager2chai3d");
+                                0, sysGran * NUMBER_OF_MAP_VIEW, "objData");
             if (cinFileMap == IntPtr.Zero)
             {
                 errMsg = "inFile (Sending) CreateFileMapping() Error.";
