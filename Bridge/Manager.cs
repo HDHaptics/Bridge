@@ -42,13 +42,20 @@ namespace Bridge
     public struct InfoView
     {
         public int sysGran;
+        public float HIPx;
+        public float HIPy;
+        public float HIPz;
         public int numberOfView;
-        public int[] sizeOfView;
+        //public int[] sizeOfView;
+    }
+
+    public struct ObjectNum
+    {
+        public int numberOfObject;
     }
 
     public struct ObjectView         // Manager --> CHAI3D (Sending)
     {
-        ///
         public float objectPosX;
         public float objectPosY;
         public float objectPosZ;
@@ -93,22 +100,24 @@ namespace Bridge
         public string errMsg = "";
         int i = 0;
 
-        uint sizeObjNum;
+        uint sizeObjInfo;
         uint sizeObjData;
+        uint NUMBER_OF_MAP_VIEW;
+        IntPtr numberOfMapView;
 
         public void init ()
         {
             SYSTEM_INFO sys_info = new SYSTEM_INFO();
             PipeNative.GetSystemInfo(out sys_info);
 
-            //sizeObjNum = (uint)Marshal.SizeOf(cinDataNum);
-            //sizeObjData = (uint)Marshal.SizeOf(cinData);
+            sizeObjInfo = (uint)Marshal.SizeOf(cDataInfo);
+            sizeObjData = (uint)Marshal.SizeOf(cinData);
 
-            uint NUMBER_OF_MAP_VIEW = 5;
+            NUMBER_OF_MAP_VIEW = 5;
             uint FILE_MAP_START = 65536;
             uint sysGran = sys_info.allocationGranularity;
             uint fileMapStart = (FILE_MAP_START / sysGran) * sysGran;
-            uint mapViewSize1 = (FILE_MAP_START % sysGran) + sizeObjNum;
+            uint mapViewSize1 = (FILE_MAP_START % sysGran) + sizeObjInfo;
             uint mapViewSize = (FILE_MAP_START % sysGran) + sizeObjData*2;
             uint fileMapSize = FILE_MAP_START + sizeObjData;
             int iViewDelta = (int) (FILE_MAP_START - fileMapStart);
@@ -173,18 +182,29 @@ namespace Bridge
                     // TODO: Sending Information Initialization
                     //cinData.numberOfObject = 10;
                     cDataInfo.sysGran = (int) sysGran;
+                    cDataInfo.HIPx = 0f;
+                    cDataInfo.HIPy = 0f;
+                    cDataInfo.HIPz = 0f;
                     cDataInfo.numberOfView = (int) NUMBER_OF_MAP_VIEW - 1;
-                    cDataInfo.sizeOfView = new int[4] { (int)sysGran, (int)sysGran, (int)sysGran, (int)sysGran };
+                    //cDataInfo.sizeOfView = new int[4] { (int)sysGran, (int)sysGran, (int)sysGran, (int)sysGran };
                     //cinData.objectPositionX = new float[10] { 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f };
                     //cinData.objectPositionY = new float[10] { 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f };
                     //cinData.objectPositionZ = new float[10] { 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, 10f };
 
                     Marshal.StructureToPtr(cDataInfo, cinMapAddress, false);
                     //Marshal.StructureToPtr()
+                    int[] sizeOfViews = new int[4] { (int)sysGran, (int)sysGran, (int)sysGran, (int)sysGran };
+                    //Marshal.Copy(sizeOfViews, 0, cinMapAddress + (int)sizeObjInfo, sizeOfViews.Length);
+                    for (int i = 0; i < sizeOfViews.Length; i++)
+                    {
+                        Marshal.WriteInt32(cinMapAddress + (int)sizeObjInfo + i * 4, sizeOfViews[i]);
+                    }                    
+                    //numberOfMapView = Marshal.AllocHGlobal((int) NUMBER_OF_MAP_VIEW * 4);
+                    
                 }
 
                 ////////
-                cinMapAddressData = PipeNative.MapViewOfFile(cinFileMap, FileMapAccess.FILE_MAP_ALL_ACCESS, 0, fileMapStart, mapViewSize);
+                cinMapAddressData = PipeNative.MapViewOfFile(cinFileMap, FileMapAccess.FILE_MAP_ALL_ACCESS, 0, fileMapStart, sysGran);
                 if (cinMapAddressData == IntPtr.Zero)
                 {
                     errMsg = PipeNative.GetLastError() + " // inFile (Sending) MapViewOfFile() Error.";
@@ -196,6 +216,11 @@ namespace Bridge
                     errMsg = "No Sending Problem!";
                     // TODO: Sending Information Initialization
                     //cinData.numberOfObject = 10;
+                    ObjectNum objectNum;
+                    objectNum.numberOfObject = 2;
+                    Marshal.StructureToPtr(objectNum, cinMapAddressData, false);
+                    int sizeObjNum = Marshal.SizeOf(objectNum);
+
                     cinData.objectPosX = 1f;
                     cinData.objectPosY = 1f;
                     cinData.objectPosZ = 1f;
@@ -203,7 +228,7 @@ namespace Bridge
                     cinData.objectRotY = 0f;
                     cinData.objectRotZ = 0f;
 
-                    Marshal.StructureToPtr(cinData, cinMapAddressData, false);
+                    Marshal.StructureToPtr(cinData, cinMapAddressData + sizeObjNum, false);
                     //Marshal.StructureToPtr()
                     cinData2.objectPosX = 2f;
                     cinData2.objectPosY = 2f;
@@ -212,7 +237,7 @@ namespace Bridge
                     cinData2.objectRotY = 0f;
                     cinData2.objectRotZ = 0f;
                     
-                    Marshal.StructureToPtr(cinData2, cinMapAddressData + (int) sizeObjData, false);
+                    Marshal.StructureToPtr(cinData2, cinMapAddressData + (int) sizeObjData + sizeObjNum, false);
                 }
 
                 ////////
@@ -251,21 +276,21 @@ namespace Bridge
             while (CHAI3Drunning)
             {
                 i++;
-                coutData = (HIPData)Marshal.PtrToStructure(coutMapAddress, typeof(HIPData));
+                cDataInfo = (InfoView)Marshal.PtrToStructure(cinMapAddress, typeof(InfoView));
 
                 cinData = (ObjectView)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectView));
-                cinData.objectPosX = coutData.currentHIPX;
-                cinData.objectPosY = coutData.currentHIPY;
-                cinData.objectPosZ = coutData.currentHIPZ;
-                Marshal.StructureToPtr(cinData, cinMapAddressData, false);
+                cinData.objectPosX = cDataInfo.HIPx;
+                cinData.objectPosY = cDataInfo.HIPy;
+                cinData.objectPosZ = cDataInfo.HIPz;
+                Marshal.StructureToPtr(cinData, cinMapAddressData + 4, false);
 
-                cinData2 = (ObjectView)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectView));
-                cinData2.objectPosX = coutData.currentHIPX+1f;
-                cinData2.objectPosY = coutData.currentHIPY+1f;
-                cinData2.objectPosZ = coutData.currentHIPZ+1f;
-                Marshal.StructureToPtr(cinData2, cinMapAddressData + (int)sizeObjData, false);
+                cinData2 = (ObjectView)Marshal.PtrToStructure(cinMapAddressData + (int)sizeObjData, typeof(ObjectView));
+                cinData2.objectPosX = cDataInfo.HIPx + 1;
+                cinData2.objectPosY = cDataInfo.HIPy + 1;
+                cinData2.objectPosZ = cDataInfo.HIPz + 1;
+                Marshal.StructureToPtr(cinData2, cinMapAddressData + (int)sizeObjData + 4, false);
 
-                updateTextEvent(this, EventArgs.Empty);
+                //updateTextEvent(this, EventArgs.Empty);
                 //if (i++ > 500000)
                 //    stopCHAI3D();
             }
@@ -287,10 +312,11 @@ namespace Bridge
 
         public string getHIPposition()
         {
-            return coutData.currentHIPX.ToString("0.000") + ", "
-                + coutData.currentHIPY.ToString("0.000") + ", "
-                + coutData.currentHIPZ.ToString("0.000")
-                + "\n" + Marshal.SizeOf(cinData).ToString();
+            string answer = cDataInfo.HIPx.ToString("0.000") + ", "
+                + cDataInfo.HIPy.ToString("0.000") + ", "
+                + cDataInfo.HIPz.ToString("0.000");
+            return answer; 
+                ;//+ "\n" + Marshal.SizeOf(cDataInfo).ToString();
         }
     }
 }

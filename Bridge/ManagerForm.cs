@@ -32,7 +32,7 @@ namespace Bridge
             }
             catch
             {
-                ErrorMsgLabel.Text = "update text error";
+               ErrorMsgLabel.Text = "update text error";
             }
         }
 
