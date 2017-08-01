@@ -277,7 +277,9 @@ namespace Bridge
             {
                 i++;
                 cDataInfo = (InfoView)Marshal.PtrToStructure(cinMapAddress, typeof(InfoView));
-
+                ObjectNum cinDataNum = (ObjectNum)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectNum));
+                cinDataNum.numberOfObject = 2;
+                Marshal.StructureToPtr(cinDataNum, cinMapAddressData, false);
                 cinData = (ObjectView)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectView));
                 cinData.objectPosX = cDataInfo.HIPx;
                 cinData.objectPosY = cDataInfo.HIPy;
