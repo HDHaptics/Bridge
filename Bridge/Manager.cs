@@ -280,17 +280,17 @@ namespace Bridge
                 ObjectNum cinDataNum = (ObjectNum)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectNum));
                 cinDataNum.numberOfObject = 2;
                 Marshal.StructureToPtr(cinDataNum, cinMapAddressData, false);
-                cinData = (ObjectView)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectView));
-                cinData.objectPosX = cDataInfo.HIPx;
-                cinData.objectPosY = cDataInfo.HIPy;
-                cinData.objectPosZ = cDataInfo.HIPz;
-                Marshal.StructureToPtr(cinData, cinMapAddressData + 4, false);
+                //cinData = (ObjectView)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectView));
+                //cinData.objectPosX = cDataInfo.HIPx;
+                //cinData.objectPosY = cDataInfo.HIPy;
+                //cinData.objectPosZ = cDataInfo.HIPz;
+                //Marshal.StructureToPtr(cinData, cinMapAddressData + 4, false);
 
-                cinData2 = (ObjectView)Marshal.PtrToStructure(cinMapAddressData + (int)sizeObjData, typeof(ObjectView));
-                cinData2.objectPosX = cDataInfo.HIPx + 1;
-                cinData2.objectPosY = cDataInfo.HIPy + 1;
-                cinData2.objectPosZ = cDataInfo.HIPz + 1;
-                Marshal.StructureToPtr(cinData2, cinMapAddressData + (int)sizeObjData + 4, false);
+                //cinData2 = (ObjectView)Marshal.PtrToStructure(cinMapAddressData + (int)sizeObjData, typeof(ObjectView));
+                //cinData2.objectPosX = cDataInfo.HIPx + 1;
+                //cinData2.objectPosY = cDataInfo.HIPy + 1;
+                //cinData2.objectPosZ = cDataInfo.HIPz + 1;
+                //Marshal.StructureToPtr(cinData2, cinMapAddressData + (int)sizeObjData + 4, false);
 
                 //updateTextEvent(this, EventArgs.Empty);
                 //if (i++ > 500000)
