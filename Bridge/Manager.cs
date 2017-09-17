@@ -217,27 +217,27 @@ namespace Bridge
                     // TODO: Sending Information Initialization
                     //cinData.numberOfObject = 10;
                     ObjectNum objectNum;
-                    objectNum.numberOfObject = 2;
+                    objectNum.numberOfObject = 0;
                     Marshal.StructureToPtr(objectNum, cinMapAddressData, false);
-                    int sizeObjNum = Marshal.SizeOf(objectNum);
+                    //int sizeObjNum = Marshal.SizeOf(objectNum);
 
-                    cinData.objectPosX = 1f;
-                    cinData.objectPosY = 1f;
-                    cinData.objectPosZ = 1f;
-                    cinData.objectRotX = 0f;
-                    cinData.objectRotY = 0f;
-                    cinData.objectRotZ = 0f;
+                    //cinData.objectPosX = 1f;
+                    //cinData.objectPosY = 1f;
+                    //cinData.objectPosZ = 1f;
+                    //cinData.objectRotX = 0f;
+                    //cinData.objectRotY = 0f;
+                    //cinData.objectRotZ = 0f;
 
-                    Marshal.StructureToPtr(cinData, cinMapAddressData + sizeObjNum, false);
-                    //Marshal.StructureToPtr()
-                    cinData2.objectPosX = 2f;
-                    cinData2.objectPosY = 2f;
-                    cinData2.objectPosZ = 2f;
-                    cinData2.objectRotX = 0f;
-                    cinData2.objectRotY = 0f;
-                    cinData2.objectRotZ = 0f;
+                    //Marshal.StructureToPtr(cinData, cinMapAddressData + sizeObjNum, false);
+                    ////Marshal.StructureToPtr()
+                    //cinData2.objectPosX = 2f;
+                    //cinData2.objectPosY = 2f;
+                    //cinData2.objectPosZ = 2f;
+                    //cinData2.objectRotX = 0f;
+                    //cinData2.objectRotY = 0f;
+                    //cinData2.objectRotZ = 0f;
                     
-                    Marshal.StructureToPtr(cinData2, cinMapAddressData + (int) sizeObjData + sizeObjNum, false);
+                    //Marshal.StructureToPtr(cinData2, cinMapAddressData + (int) sizeObjData + sizeObjNum, false);
                 }
 
                 ////////
@@ -272,14 +272,14 @@ namespace Bridge
 
         public void CHAI3dThread()
         {
-            i = 0;
-            while (CHAI3Drunning)
-            {
-                i++;
-                cDataInfo = (InfoView)Marshal.PtrToStructure(cinMapAddress, typeof(InfoView));
-                ObjectNum cinDataNum = (ObjectNum)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectNum));
-                cinDataNum.numberOfObject = 2;
-                Marshal.StructureToPtr(cinDataNum, cinMapAddressData, false);
+            //i = 0;
+            //while (CHAI3Drunning)
+            //{
+            //    i++;
+            //    cDataInfo = (InfoView)Marshal.PtrToStructure(cinMapAddress, typeof(InfoView));
+                //ObjectNum cinDataNum = (ObjectNum)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectNum));
+                //cinDataNum.numberOfObject = 0;
+                //Marshal.StructureToPtr(cinDataNum, cinMapAddressData, false);
                 //cinData = (ObjectView)Marshal.PtrToStructure(cinMapAddressData, typeof(ObjectView));
                 //cinData.objectPosX = cDataInfo.HIPx;
                 //cinData.objectPosY = cDataInfo.HIPy;
@@ -295,7 +295,7 @@ namespace Bridge
                 //updateTextEvent(this, EventArgs.Empty);
                 //if (i++ > 500000)
                 //    stopCHAI3D();
-            }
+            //}
         }
 
         public void stopCHAI3D()
